@@ -25,6 +25,30 @@ const StorageCtrl = (function() {
             items = JSON.parse(localStorage.getItem('items'));
          }
          return items;
+      },
+
+      updateItemStorage: function(updatedItem) {
+         let items = JSON.parse(localStorage.getItem('items'));
+         items.forEach(function(item, index) {
+            if (updatedItem.id === item.id) {
+               items.splice(index, 1, updatedItem);
+            }
+         });
+         localStorage.setItem('items', JSON.stringify(items));
+      },
+
+      deleteItemFromStorage: function(id) {
+         let items = JSON.parse(localStorage.getItem('items'));
+         items.forEach(function(item, index) {
+            if (id === item.id) {
+               items.splice(index, 1);
+            }
+         });
+         localStorage.setItem('items', JSON.stringify(items));
+      },
+
+      clarItemsFromStorage: function() {
+         localStorage.removeItem('items');
       }
    };
 })();
@@ -350,21 +374,25 @@ const App = (function(ItemCtrl, StorageCtrl, UICtrl) {
       const totalCalories = ItemCtrl.getTotalCalories();
       UICtrl.showTotalCalories(totalCalories);
 
+      // Update local storage
+      StorageCtrl.updateItemStorage(updatedItem);
+
       UICtrl.clearEditState();
    };
 
    // Delete button event
    const itemDeleteSubmit = function(e) {
+      e.preventDefault();
+
       const currentItem = ItemCtrl.getCurrentItem();
       ItemCtrl.deleteItem(currentItem.id);
       UICtrl.deleteListItem(currentItem.id);
 
       const totalCalories = ItemCtrl.getTotalCalories();
       UICtrl.showTotalCalories(totalCalories);
+      StorageCtrl.deleteItemFromStorage(currentItem.id);
 
       UICtrl.clearEditState();
-
-      e.preventDefault();
    };
 
    // Clear items event
@@ -376,9 +404,10 @@ const App = (function(ItemCtrl, StorageCtrl, UICtrl) {
       const totalCalories = ItemCtrl.getTotalCalories();
       // Add total calories to UI
       UICtrl.showTotalCalories(totalCalories);
-
       // Remove from UI
       UICtrl.removeItems();
+      // Clear from local storage
+      StorageCtrl.clarItemsFromStorage();
       // Hide UI
       UICtrl.hideList();
    };
